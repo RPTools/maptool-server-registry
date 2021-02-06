@@ -19,14 +19,20 @@ import { injectable } from 'inversify';
 @injectable()
 export class ConfigImpl implements Config {
   /**
-   * Number of milliseconds between heart beats.
+   * Number of minutes between heart beats.
    * @private
    */
-  private readonly heartBeatMS = 15 * 6 * 1000;
+  private readonly heartBeatMinutes = 15;
   /**
-   * Returns the number of Milliseconds between heart beats.
+   * Returns the number of Minutes between heart beats.
    */
-  getHeartBeatMS(): number {
-    return this.heartBeatMS;
+  getHeartBeatMinutes(): number {
+    return this.heartBeatMinutes;
+  }
+  /**
+   * Returns the number of minutes for time out waiting for a heart beat.
+   */
+  getTimeoutMinutes(): number {
+    return this.heartBeatMinutes * 2;
   }
 }

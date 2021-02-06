@@ -20,8 +20,6 @@ import { DEPENDENCY_TYPES } from '../../inversify/inversify-types';
 import { LoggerFactory } from '../../util/LoggerFactory';
 import { DBConnectionPool } from '../../database/DBConnectionPool';
 import { v4 } from 'uuid';
-import { MapToolServices } from '../MapToolServices';
-import { MapToolServicesImpl } from '../MapToolServicesImpl';
 import { Config } from '../../config/Config';
 
 interface ServerDetails {
@@ -77,10 +75,10 @@ export class RegisterServerRouteHandler implements RouteHandler {
       }
 
       const id = v4();
-      const heartBeatMS = this.config.getHeartBeatMS();
+      const heartBeatMinutes = this.config.getHeartBeatMinutes();
       this.registerServer(serverDetails, id)
         .then(() => {
-          res.send({ serverId: id, heartBeatMS: heartBeatMS });
+          res.send({ serverId: id, heartBeatMinutes: heartBeatMinutes });
           return;
         })
         .catch((err) => {

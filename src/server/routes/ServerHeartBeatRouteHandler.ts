@@ -24,6 +24,8 @@ import { v4 } from 'uuid';
 interface HeartBeat {
   id: string;
   clientId: string;
+  ipv4: string;
+  ipv6: string;
   players: number;
 }
 
@@ -43,8 +45,18 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
     expressApp.post('/server-heartbeat', (req, res) => {
       const heartbeat = req.body as HeartBeat;
 
+      let valid = true;
+
       // First check all the mandatory fields
       if (!heartbeat.id || !heartbeat.clientId) {
+        valid = false;
+      }
+
+      if (!heartbeat.ipv4 && !heartbeat.ipv6) {
+        valid = false;
+      }
+
+      if (!valid) {
         this.logger.error('Invalid Server Heart Beat');
         this.logger.error(JSON.stringify(req.body));
         res.sendStatus(400);
@@ -67,13 +79,13 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
     const pool = await this.dbConnectionPool.getPool();
 
     await pool.query(
-      'update maptool_instance set active = false where active = true and client_id = ? and id != ?',
+      'update maptool_instance set active = false, ipv4 = null, ipv6 = null where active = true and client_id = ? and id != ?',
       [heartBeat.clientId, heartBeat.id],
     );
 
     await pool.query(
-      'update maptool_instance set active = true, last_heartbeat = now() where id = ?',
-      [heartBeat.id],
+      'update maptool_instance set active = true, ipv4 = ?, ipv6 = ?, last_heartbeat = now() where id = ?',
+      [heartBeat.id, heartBeat.ipv4, heartBeat.ipv6],
     );
 
     await pool.query(

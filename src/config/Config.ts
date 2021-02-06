@@ -15,7 +15,12 @@
 
 export interface Config {
   /**
-   * Returns the number of Milliseconds between heart beats.
+   * Returns the number of Minutes between heart beats.
    */
-  getHeartBeatMS(): number;
+  getHeartBeatMinutes(): number;
+
+  /**
+   * Returns the number of minutes for time out waiting for a heart beat.
+   */
+  getTimeoutMinutes(): number;
 }

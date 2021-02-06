@@ -18,6 +18,12 @@ import { inject, injectable } from 'inversify';
 import { DEPENDENCY_TYPES } from '../inversify/inversify-types';
 import { LoggerFactory } from '../util/LoggerFactory';
 import { DBConnectionPool } from '../database/DBConnectionPool';
+import { FieldPacket, RowDataPacket } from 'mysql2';
+import { Config } from '../config/Config';
+
+interface ExpiredServers extends RowDataPacket {
+  id: string;
+}
 
 @injectable()
 export class ServerExpiryImpl implements ServerExpiry {
@@ -26,14 +32,30 @@ export class ServerExpiryImpl implements ServerExpiry {
     @inject(DEPENDENCY_TYPES.LoggerFactory) loggerFactory: LoggerFactory,
     @inject(DEPENDENCY_TYPES.DBConnectionPool)
     private readonly dbConnectionPool: DBConnectionPool,
+    @inject(DEPENDENCY_TYPES.Config)
+    private readonly config: Config,
   ) {
     this.logger = loggerFactory.getLogger();
   }
 
   run = async (): Promise<void> => {
-    this.logger.info('ServerExpiry started.');
+    const timeoutMinutes = this.config.getTimeoutMinutes();
     const pool = await this.dbConnectionPool.getPool();
-    pool.query('update ma');
-    this.logger.info('ServerExpiry ended.');
+    const [expired]: [ExpiredServers[], FieldPacket[]] = await pool.query<
+      ExpiredServers[]
+    >(
+      'select id from maptool_instance where active = true and timestampadd(MINUTE, ?, last_heartbeat) < now()',
+      [timeoutMinutes],
+    );
+    for (const server of expired) {
+      await pool.query(
+        'update maptool_instance set active = false, ipv4 = null, ipv6 = null where id = ?',
+        [server.id],
+      );
+      await pool.query(
+        'insert into event_log (instance_id, event_type) values (?, ?)',
+        [server.id, 'ServerTimeOut'],
+      );
+    }
   };
 }
