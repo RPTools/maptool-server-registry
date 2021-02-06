@@ -430,3 +430,7 @@ build/
 
 # Generated Documentation
 docs/generated
+
+
+# Stop people checking in their docker.env file with passwords
+docker.env
