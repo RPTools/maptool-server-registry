@@ -39,7 +39,7 @@ export class DBConnectionPoolImpl implements DBConnectionPool {
     const dbHost = process.env.MYSQL_HOST;
     const dbUser = process.env.MYSQL_USER;
     const dbPass = process.env.MYSQL_PASSWORD;
-    const dbDatabase = process.env.MYSQL_DB;
+    const dbDatabase = process.env.MYSQL_DATABASE;
 
     this.connectionPool = createPool({
       host: dbHost,
