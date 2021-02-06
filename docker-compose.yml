@@ -1,0 +1,26 @@
+version: "3.2"
+services:
+  nodejs:
+    build:
+      context: .
+      dockerfile: Dockerfile-node
+    image: rptools/maptool-server-listing
+    env_file:
+      - docker.env
+    ports:
+      - "5000:3000"
+    container_name: maptool-server-listing
+  mariadb:
+    build:
+      context: .
+      dockerfile: Dockerfile-db
+    image: rptools/maptool-server-listing-db
+    env_file:
+      - docker.env
+    volumes:
+      - maptool-server-listing-db-vol:/var/lib/mysql
+    container_name: maptool-server-listing-db
+
+
+volumes:
+  maptool-server-listing-db-vol:

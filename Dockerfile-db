@@ -1,0 +1,6 @@
+FROM mariadb:latest
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_USER=maptool
+ENV MYSQL_PASSWORD=maptool
+ENV MYSQL_DATABASE=maptooldb
+COPY ./src/sql/initdb /docker-entrypoint-initdb.d/
