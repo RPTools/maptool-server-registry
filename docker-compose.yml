@@ -10,6 +10,7 @@ services:
     ports:
       - "5000:3000"
     container_name: maptool-server-listing
+    restart: unless-stopped
   mariadb:
     build:
       context: .
@@ -20,6 +21,7 @@ services:
     volumes:
       - maptool-server-listing-db-vol:/var/lib/mysql
     container_name: maptool-server-listing-db
+    restart: unless-stopped
 
 
 volumes:
