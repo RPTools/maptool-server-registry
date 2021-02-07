@@ -26,8 +26,7 @@ import { FieldPacket, RowDataPacket } from 'mysql2';
 interface ServerDetails {
   clientId: string;
   name: string;
-  ipv4?: string;
-  ipv6?: string;
+  address: string;
   port: number;
   version: string;
   country: string;
@@ -55,7 +54,6 @@ export class RegisterServerRouteHandler implements RouteHandler {
     this.logger.info('Registering /register-server');
     expressApp.put('/register-server', async (req, res) => {
       const serverDetails = req.body as ServerDetails;
-      let valid = true;
 
       // First check all the mandatory fields
       if (
@@ -63,17 +61,9 @@ export class RegisterServerRouteHandler implements RouteHandler {
         !serverDetails.name ||
         !serverDetails.port ||
         !serverDetails.version ||
-        !serverDetails.country
+        !serverDetails.country ||
+        !serverDetails.address
       ) {
-        valid = false;
-      }
-
-      // One or both of ipv4 and ipv6 must be set
-      if (!serverDetails.ipv4 && !serverDetails.ipv6) {
-        valid = false;
-      }
-
-      if (!valid) {
         this.logger.error('Invalid Register Server Request');
         this.logger.error(JSON.stringify(req.body));
         res.sendStatus(400);
@@ -96,7 +86,11 @@ export class RegisterServerRouteHandler implements RouteHandler {
 
       const id = v4();
       await this.registerServer(serverDetails, id);
-      res.send({ serverId: id, heartBeatMinutes: heartBeatMinutes });
+      res.send({
+        status: 'ok',
+        serverId: id,
+        heartBeatMinutes: heartBeatMinutes,
+      });
     });
   }
 
@@ -114,16 +108,15 @@ export class RegisterServerRouteHandler implements RouteHandler {
 
     await pool.query(
       `insert into maptool_instance (
-        id, client_id, name, ipv4, ipv6, port, public, version, last_heartbeat, active, first_seen, country_code
+        id, client_id, name, address, port, public, version, last_heartbeat, active, first_seen, country_code
     ) values (
-        ?, ?, ?, ?, ?, ?, true, ?, now(), true, now(), ?
+        ?, ?, ?, ?, ?, true, ?, now(), true, now(), ?
     )`,
       [
         id,
         serverDetails.clientId,
         serverDetails.name,
-        serverDetails.ipv4,
-        serverDetails.ipv6,
+        serverDetails.address,
         serverDetails.port,
         serverDetails.version,
         serverDetails.country,
@@ -158,10 +151,9 @@ export class RegisterServerRouteHandler implements RouteHandler {
     } else if (detail[0].client_id == serverDetails.clientId) {
       // Update with ip etc
       await pool.query(
-        'update maptool_instance set ipv4 = ?, ipv6 = ?, active = true, last_heartbeat = now(), port = ?, version = ? where id = ?',
+        'update maptool_instance set address = ?, active = true, last_heartbeat = now(), port = ?, version = ? where id = ?',
         [
-          serverDetails.ipv4,
-          serverDetails.ipv6,
+          serverDetails.address,
           serverDetails.port,
           serverDetails.version,
           detail[0].id,

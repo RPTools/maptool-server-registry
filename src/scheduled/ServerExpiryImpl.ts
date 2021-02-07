@@ -49,7 +49,7 @@ export class ServerExpiryImpl implements ServerExpiry {
     );
     for (const server of expired) {
       await pool.query(
-        'update maptool_instance set active = false, ipv4 = null, ipv6 = null where id = ?',
+        'update maptool_instance set active = false, address = null where id = ?',
         [server.id],
       );
       await pool.query(

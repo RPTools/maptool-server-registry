@@ -25,8 +25,7 @@ import { serialize } from 'v8';
 
 interface ServerDetails extends RowDataPacket {
   name: string;
-  ipv4?: string;
-  ipv6?: string;
+  address: string;
   port: number;
   version: string;
 }
@@ -72,7 +71,7 @@ export class ServerDetailsRouteHandler implements RouteHandler {
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
     >(
-      'select name, ipv4, ipv6, port, version from maptool_instance where active = true and name = ?',
+      'select name, address, port, version from maptool_instance where active = true and name = ?',
       [name],
     );
 
