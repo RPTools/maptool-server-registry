@@ -26,6 +26,7 @@ interface HeartBeat {
   clientId: string;
   address: string;
   players: number;
+  maps: number;
 }
 
 @injectable()
@@ -88,8 +89,8 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
     );
 
     await pool.query(
-      'insert into heartbeat_log(instance_id, number_players) values (?, ?)',
-      [heartBeat.id, heartBeat.players],
+      'insert into heartbeat_log(instance_id, number_players, number_maps) values (?, ?, ?)',
+      [heartBeat.id, heartBeat.players, heartBeat.maps],
     );
   }
 }

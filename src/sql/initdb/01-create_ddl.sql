@@ -10,6 +10,8 @@ create table maptool_instance (
     active          boolean             not null,
     first_seen      timestamp           not null,
     country_code    varchar(2)          not null,
+    language        varchar(100)        not null,
+    timezone        varchar(100)        not null,
     primary key (id),
     index(active)
 );
@@ -30,6 +32,7 @@ create table heartbeat_log (
     instance_id     varchar(255)        not null,
     timestamp       timestamp           not null,
     number_players  smallint            not null,
+    number_maps     smallint            not null,
 
     index(instance_id),
 

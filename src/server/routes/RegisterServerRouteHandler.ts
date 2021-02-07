@@ -30,6 +30,8 @@ interface ServerDetails {
   port: number;
   version: string;
   country: string;
+  language: string;
+  timezone: string;
 }
 
 interface ExistingInstance {
@@ -108,9 +110,9 @@ export class RegisterServerRouteHandler implements RouteHandler {
 
     await pool.query(
       `insert into maptool_instance (
-        id, client_id, name, address, port, public, version, last_heartbeat, active, first_seen, country_code
+        id, client_id, name, address, port, public, version, last_heartbeat, active, first_seen, country_code, language, timezone
     ) values (
-        ?, ?, ?, ?, ?, true, ?, now(), true, now(), ?
+        ?, ?, ?, ?, ?, true, ?, now(), true, now(), ?, ?, ?
     )`,
       [
         id,
@@ -120,6 +122,8 @@ export class RegisterServerRouteHandler implements RouteHandler {
         serverDetails.port,
         serverDetails.version,
         serverDetails.country,
+        serverDetails.language,
+        serverDetails.timezone,
       ],
     );
 
