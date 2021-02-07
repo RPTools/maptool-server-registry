@@ -21,6 +21,7 @@ import { LoggerFactory } from '../../util/LoggerFactory';
 import { DBConnectionPool } from '../../database/DBConnectionPool';
 import { v4 } from 'uuid';
 import { Config } from '../../config/Config';
+import { FieldPacket, RowDataPacket } from 'mysql2';
 
 interface ServerDetails {
   clientId: string;
@@ -30,6 +31,11 @@ interface ServerDetails {
   port: number;
   version: string;
   country: string;
+}
+
+interface ExistingInstance {
+  status: 'matched' | 'not-matched' | 'none';
+  id?: string;
 }
 
 @injectable()
@@ -47,7 +53,7 @@ export class RegisterServerRouteHandler implements RouteHandler {
 
   addRoutes(expressApp: Express): void {
     this.logger.info('Registering /register-server');
-    expressApp.put('/register-server', (req, res) => {
+    expressApp.put('/register-server', async (req, res) => {
       const serverDetails = req.body as ServerDetails;
       let valid = true;
 
@@ -74,17 +80,23 @@ export class RegisterServerRouteHandler implements RouteHandler {
         return;
       }
 
-      const id = v4();
       const heartBeatMinutes = this.config.getHeartBeatMinutes();
-      this.registerServer(serverDetails, id)
-        .then(() => {
-          res.send({ serverId: id, heartBeatMinutes: heartBeatMinutes });
-          return;
-        })
-        .catch((err) => {
-          this.logger.error(err);
-          this.logger.error(JSON.stringify(serverDetails));
+      const details = await this.checkExistingInstance(serverDetails);
+      if (details.status == 'not-matched') {
+        res.send({ status: 'name-exists' });
+        return;
+      } else if (details.status == 'matched') {
+        res.send({
+          status: 'ok',
+          id: details.id,
+          heartBeatMinutes: heartBeatMinutes,
         });
+        return;
+      }
+
+      const id = v4();
+      await this.registerServer(serverDetails, id);
+      res.send({ serverId: id, heartBeatMinutes: heartBeatMinutes });
     });
   }
 
@@ -122,5 +134,46 @@ export class RegisterServerRouteHandler implements RouteHandler {
       'insert into event_log (instance_id, event_type) values (?, ?)',
       [id, 'RegisterServer'],
     );
+  }
+
+  async checkExistingInstance(
+    serverDetails: ServerDetails,
+  ): Promise<ExistingInstance> {
+    const pool = await this.dbConnectionPool.getPool();
+
+    interface ExistingDetails extends RowDataPacket {
+      id: string;
+      client_id: string;
+    }
+
+    const [detail]: [ExistingDetails[], FieldPacket[]] = await pool.query<
+      ExistingDetails[]
+    >(
+      'select id, client_id from maptool_instance where active = true and name = ?',
+      [serverDetails.name],
+    );
+
+    if (detail.length == 0) {
+      return { status: 'none' };
+    } else if (detail[0].client_id == serverDetails.clientId) {
+      // Update with ip etc
+      await pool.query(
+        'update maptool_instance set ipv4 = ?, ipv6 = ?, active = true, last_heartbeat = now(), port = ?, version = ? where id = ?',
+        [
+          serverDetails.ipv4,
+          serverDetails.ipv6,
+          serverDetails.port,
+          serverDetails.version,
+          detail[0].id,
+        ],
+      );
+      await pool.query(
+        'insert into event_log (instance_id, event_type) values (?, ?)',
+        [detail[0].id, 'UpdateServer'],
+      );
+      return { status: 'matched', id: detail[0].id };
+    } else {
+      return { status: 'not-matched' };
+    }
   }
 }

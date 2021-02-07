@@ -25,10 +25,14 @@ import { serialize } from 'v8';
 
 interface ServerDetails extends RowDataPacket {
   name: string;
+  ipv4?: string;
+  ipv6?: string;
+  port: number;
+  version: string;
 }
 
 @injectable()
-export class ActiveServersRouteHandler implements RouteHandler {
+export class ServerDetailsRouteHandler implements RouteHandler {
   private readonly logger;
   constructor(
     @inject(DEPENDENCY_TYPES.LoggerFactory) loggerFactory: LoggerFactory,
@@ -39,12 +43,21 @@ export class ActiveServersRouteHandler implements RouteHandler {
   }
 
   addRoutes(expressApp: Express): void {
-    this.logger.info('Registering /active-servers');
+    this.logger.info('Registering /server-details');
 
-    expressApp.get('/active-servers', (req, res) => {
-      this.getServerDetails()
+    expressApp.get('/server-details', (req, res) => {
+      const serverName = req.query.name;
+
+      if (!serverName || typeof serverName != 'string') {
+        this.logger.error('Invalid Server Details Request, no name');
+        res.sendStatus(400);
+        return;
+      }
+
+      this.getServerDetails(serverName)
         .then((details: ServerDetails[]) => {
           res.send(details);
+          return;
         })
         .catch((err) => {
           this.logger.error('Error retrieving active servers');
@@ -54,11 +67,14 @@ export class ActiveServersRouteHandler implements RouteHandler {
     });
   }
 
-  async getServerDetails(): Promise<ServerDetails[]> {
+  async getServerDetails(name: string): Promise<ServerDetails[]> {
     const pool = await this.dbConnectionPool.getPool();
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
-    >('select name from maptool_instance where active = true');
+    >(
+      'select name, ipv4, ipv6, port, version from maptool_instance where active = true and name = ?',
+      [name],
+    );
 
     return serverDetails;
   }

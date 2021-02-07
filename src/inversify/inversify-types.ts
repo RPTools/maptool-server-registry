@@ -43,4 +43,6 @@ export const ROUTE_DEPENDENCY_TYPES = {
   ServerHeartBeatRouteHandler: Symbol.for('ServerHeartBeatRouteHandler'),
   /** Class for the server disconnection route handler. */
   ServerDisconnectRouteHandler: Symbol.for('ServerDisconnectRouteHandler'),
+  /** Server Details Route handler. */
+  ServerDetailsRouteHandler: Symbol.for('ServerDetailsRouteHandler'),
 };

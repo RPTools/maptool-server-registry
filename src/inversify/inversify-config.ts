@@ -34,6 +34,7 @@ import { Config } from '../config/Config';
 import { ConfigImpl } from '../config/ConfigImpl';
 import { ServerExpiry } from '../scheduled/ServerExpiry';
 import { ServerExpiryImpl } from '../scheduled/ServerExpiryImpl';
+import { ServerDetailsRouteHandler } from '../server/routes/ServerDetailsRouteHandler';
 
 /**
  * The dependency container for inversify.
@@ -105,6 +106,11 @@ dependencyContainer
   .inSingletonScope();
 
 dependencyContainer
+  .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServerDetailsRouteHandler)
+  .to(ServerDetailsRouteHandler)
+  .inSingletonScope();
+
+dependencyContainer
   .bind<RoutesManager>(ROUTE_DEPENDENCY_TYPES.RoutesHandler)
   .to(RoutesManagerImpl)
   .inSingletonScope()
@@ -134,5 +140,9 @@ dependencyContainer
     );
     routesHandler.registerRoutes(serverDisconnectRouteHandler);
 
+    const serverDetailsRouteHandler = context.container.get<RouteHandler>(
+      ROUTE_DEPENDENCY_TYPES.ServerDetailsRouteHandler,
+    );
+    routesHandler.registerRoutes(serverDetailsRouteHandler);
     return routesHandler;
   });

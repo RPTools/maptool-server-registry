@@ -65,19 +65,24 @@ export class ServerDisconnectRouteHandler implements RouteHandler {
   async registerDisconnect(disconnect: Disconnect): Promise<void> {
     const pool = await this.dbConnectionPool.getPool();
 
-    await pool.query(
-      'insert into event_log (instance_id, event_type) values (?, ?)',
-      [disconnect.id, 'DisconnectServer'],
-    );
+    try {
+      await pool.query(
+        'insert into event_log (instance_id, event_type) values (?, ?)',
+        [disconnect.id, 'DisconnectServer'],
+      );
 
-    await pool.query(
-      'update maptool_instance set active = false, last_heartbeat = now() where client_id = ?',
-      [disconnect.clientId],
-    );
+      await pool.query(
+        'update maptool_instance set active = false, last_heartbeat = now() where client_id = ?',
+        [disconnect.clientId],
+      );
 
-    await pool.query(
-      'update maptool_instance set active = false, last_heartbeat = now() where id = ?',
-      [disconnect.id],
-    );
+      await pool.query(
+        'update maptool_instance set active = false, last_heartbeat = now() where id = ?',
+        [disconnect.id],
+      );
+    } catch (err) {
+      this.logger.error('Error trying to process disconnect message');
+      this.logger.error(err);
+    }
   }
 }
