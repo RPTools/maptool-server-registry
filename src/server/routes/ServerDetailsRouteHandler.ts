@@ -28,6 +28,7 @@ interface ServerDetails extends RowDataPacket {
   address: string;
   port: number;
   version: string;
+  last_heartbeat: string;
 }
 
 @injectable()
@@ -71,7 +72,7 @@ export class ServerDetailsRouteHandler implements RouteHandler {
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
     >(
-      'select name, address, port, version from maptool_instance where active = true and name = ?',
+      'select name, address, port, version, last_heartbeat from maptool_instance where active = true and name = ?',
       [name],
     );
 
