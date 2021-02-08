@@ -66,7 +66,7 @@ export class ServerDetailsRouteHandler implements RouteHandler {
     });
   }
 
-  async getServerDetails(name: string): Promise<ServerDetails[]> {
+  async getServerDetails(name: string): Promise<ServerDetails> {
     const pool = await this.dbConnectionPool.getPool();
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
@@ -75,6 +75,6 @@ export class ServerDetailsRouteHandler implements RouteHandler {
       [name],
     );
 
-    return serverDetails;
+    return serverDetails[0];
   }
 }
