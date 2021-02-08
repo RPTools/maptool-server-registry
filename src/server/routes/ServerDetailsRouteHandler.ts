@@ -54,7 +54,7 @@ export class ServerDetailsRouteHandler implements RouteHandler {
       }
 
       this.getServerDetails(serverName)
-        .then((details: ServerDetails[]) => {
+        .then((details: ServerDetails) => {
           res.send(details);
           return;
         })
