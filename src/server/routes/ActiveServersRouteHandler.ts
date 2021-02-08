@@ -25,6 +25,7 @@ import { serialize } from 'v8';
 
 interface ServerDetails extends RowDataPacket {
   name: string;
+  version: string;
 }
 
 @injectable()
@@ -58,7 +59,7 @@ export class ActiveServersRouteHandler implements RouteHandler {
     const pool = await this.dbConnectionPool.getPool();
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
-    >('select name from maptool_instance where active = true');
+    >('select name, version from maptool_instance where active = true');
 
     return serverDetails;
   }
