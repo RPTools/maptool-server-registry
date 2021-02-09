@@ -72,7 +72,7 @@ export class ServerDisconnectRouteHandler implements RouteHandler {
       );
 
       await pool.query(
-        'update maptool_instance set active = false, last_heartbeat = now() where client_id = ?',
+        'update maptool_instance set active = false where client_id = ?',
         [disconnect.clientId],
       );
 
