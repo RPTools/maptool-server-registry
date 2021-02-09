@@ -42,7 +42,7 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
 
   addRoutes(expressApp: Express): void {
     this.logger.info('Registering /server-heartbeat');
-    expressApp.post('/server-heartbeat', (req, res) => {
+    expressApp.patch('/server-heartbeat', (req, res) => {
       const heartbeat = req.body as HeartBeat;
 
       let valid = true;
@@ -79,7 +79,7 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
     const pool = await this.dbConnectionPool.getPool();
 
     await pool.query(
-      'update maptool_instance set active = false, address = null, where active = true and client_id = ? and id != ?',
+      'update maptool_instance set active = false, address = null where active = true and client_id = ? and id != ?',
       [heartBeat.clientId, heartBeat.id],
     );
 
