@@ -39,7 +39,7 @@ export class ServerDisconnectRouteHandler implements RouteHandler {
 
   addRoutes(expressApp: Express): void {
     this.logger.info('Registering /server-disconnect');
-    expressApp.put('/server-disconnect', (req, res) => {
+    expressApp.patch('/server-disconnect', (req, res) => {
       const disconnect = req.body as Disconnect;
 
       // First check all the mandatory fields
