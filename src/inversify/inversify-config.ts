@@ -144,5 +144,10 @@ dependencyContainer
       ROUTE_DEPENDENCY_TYPES.ServerDetailsRouteHandler,
     );
     routesHandler.registerRoutes(serverDetailsRouteHandler);
+
+    const serversTodayRouteHandler = context.container.get<RouteHandler>(
+      ROUTE_DEPENDENCY_TYPES.ServersTodayRouteHandler,
+    );
+    routesHandler.registerRoutes(serversTodayRouteHandler);
     return routesHandler;
   });
