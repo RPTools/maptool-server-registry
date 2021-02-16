@@ -29,7 +29,7 @@ interface ServerDetails extends RowDataPacket {
 }
 
 @injectable()
-export class ServersTodayRouteHandler implements RouteHandler {
+export class ServersYesterdayRouteHandler implements RouteHandler {
   private readonly logger;
   constructor(
     @inject(DEPENDENCY_TYPES.LoggerFactory) loggerFactory: LoggerFactory,
@@ -40,9 +40,9 @@ export class ServersTodayRouteHandler implements RouteHandler {
   }
 
   addRoutes(expressApp: Express): void {
-    this.logger.info('Registering /servers-today');
+    this.logger.info('Registering /servers-yesterday');
 
-    expressApp.get('/servers-today', (req, res) => {
+    expressApp.get('/servers-yesterday', (req, res) => {
       this.getServerDetails()
         .then((details: ServerDetails[]) => {
           res.send(details);
@@ -60,7 +60,7 @@ export class ServersTodayRouteHandler implements RouteHandler {
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
     >(
-      'select distinct name, version from maptool_instance where last_heartbeat>= curdate() ',
+      'select distinct name, version from maptool_instance where last_heartbeat between curdate() - interval 1 day and curdate()',
     );
 
     return serverDetails;

@@ -29,7 +29,7 @@ interface ServerDetails extends RowDataPacket {
 }
 
 @injectable()
-export class ServersTodayRouteHandler implements RouteHandler {
+export class ServersLastNHoursRouteHandler implements RouteHandler {
   private readonly logger;
   constructor(
     @inject(DEPENDENCY_TYPES.LoggerFactory) loggerFactory: LoggerFactory,
@@ -40,10 +40,26 @@ export class ServersTodayRouteHandler implements RouteHandler {
   }
 
   addRoutes(expressApp: Express): void {
-    this.logger.info('Registering /servers-today');
+    this.logger.info('Registering /servers-last-n-hours');
 
-    expressApp.get('/servers-today', (req, res) => {
-      this.getServerDetails()
+    expressApp.get('/servers-last-n-hours', (req, res) => {
+      const numHoursString = req.query.hours;
+
+      if (!numHoursString || typeof numHoursString != 'string') {
+        this.logger.error('Invalid number of hours');
+        res.sendStatus(400);
+        return;
+      }
+
+      const numHours = parseInt(numHoursString);
+
+      if (isNaN(numHours)) {
+        this.logger.error('Invalid number of hours');
+        res.sendStatus(400);
+        return;
+      }
+
+      this.getServerDetails(numHours)
         .then((details: ServerDetails[]) => {
           res.send(details);
         })
@@ -55,12 +71,13 @@ export class ServersTodayRouteHandler implements RouteHandler {
     });
   }
 
-  async getServerDetails(): Promise<ServerDetails[]> {
+  async getServerDetails(numberOfHours: number): Promise<ServerDetails[]> {
     const pool = await this.dbConnectionPool.getPool();
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
     >(
-      'select distinct name, version from maptool_instance where last_heartbeat>= curdate() ',
+      'select distinct name, version from maptool_instance where last_heartbeat>= curdate() - interval ? hour',
+      [numberOfHours],
     );
 
     return serverDetails;
