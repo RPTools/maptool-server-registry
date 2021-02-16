@@ -35,6 +35,7 @@ import { ConfigImpl } from '../config/ConfigImpl';
 import { ServerExpiry } from '../scheduled/ServerExpiry';
 import { ServerExpiryImpl } from '../scheduled/ServerExpiryImpl';
 import { ServerDetailsRouteHandler } from '../server/routes/ServerDetailsRouteHandler';
+import { ServersTodayRouteHandler } from '../server/routes/ServersTodayRouteHandler';
 
 /**
  * The dependency container for inversify.
@@ -108,6 +109,11 @@ dependencyContainer
 dependencyContainer
   .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServerDetailsRouteHandler)
   .to(ServerDetailsRouteHandler)
+  .inSingletonScope();
+
+dependencyContainer
+  .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServersTodayRouteHandler)
+  .to(ServersTodayRouteHandler)
   .inSingletonScope();
 
 dependencyContainer
