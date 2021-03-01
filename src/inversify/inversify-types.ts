@@ -45,4 +45,6 @@ export const ROUTE_DEPENDENCY_TYPES = {
   ServerDisconnectRouteHandler: Symbol.for('ServerDisconnectRouteHandler'),
   /** Server Details Route handler. */
   ServerDetailsRouteHandler: Symbol.for('ServerDetailsRouteHandler'),
+  /** Today's Servers Route handler. */
+  ServersTodayRouteHandler: Symbol.for('ServersTodayRouteHandler'),
 };
