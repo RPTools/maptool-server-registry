@@ -79,7 +79,7 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
     const pool = await this.dbConnectionPool.getPool();
     await pool.query(
       'insert into heartbeat_log(instance_id, number_players, number_maps) values (?, ?, ?)',
-      [heartBeat.id, heartBeat.players, heartBeat.maps],
+      [heartBeat.id, heartBeat.number_players, heartBeat.number_maps],
     );
 
     await pool.query(
