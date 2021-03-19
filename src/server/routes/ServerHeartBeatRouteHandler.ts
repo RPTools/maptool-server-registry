@@ -83,7 +83,7 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
     );
 
     await pool.query(
-      'update maptool_instance set active = false, address = null, where active = true and client_id = ? and id != ?',
+      'update maptool_instance set active = false, address = null where active = true and client_id = ? and id != ?',
       [heartBeat.clientId, heartBeat.id],
     );
 
