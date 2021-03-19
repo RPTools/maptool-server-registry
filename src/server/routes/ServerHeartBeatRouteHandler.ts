@@ -25,8 +25,8 @@ interface HeartBeat {
   id: string;
   clientId: string;
   address: string;
-  players: number;
-  maps: number;
+  number_players: number;
+  number_maps: number;
 }
 
 @injectable()
