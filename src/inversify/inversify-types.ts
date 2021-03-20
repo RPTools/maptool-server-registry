@@ -51,4 +51,6 @@ export const ROUTE_DEPENDENCY_TYPES = {
   ServersYesterdayRouteHandler: Symbol.for('ServersYesterdayRouteHandler'),
   /** Last N hours Servers Route handler. */
   ServersLastNHoursRouteHandler: Symbol.for('ServersLastNHoursRouteHandler'),
+  /** Server versions by last X hours. */
+  ServerVersionsRouteHandler: Symbol.for('ServerVersionsRouteHandler'),
 };

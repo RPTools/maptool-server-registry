@@ -108,6 +108,11 @@ export class RegisterServerRouteHandler implements RouteHandler {
       [serverDetails.clientId],
     );
 
+    let version: string = serverDetails.version;
+    if (version === '1' || version === '0.0.1') {
+      version = 'Development';
+    }
+
     await pool.query(
       `insert into maptool_instance (
         id, client_id, name, address, port, public, version, last_heartbeat, active, first_seen, country_code, language, timezone

@@ -76,7 +76,7 @@ export class ServersLastNHoursRouteHandler implements RouteHandler {
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
     >(
-      'select distinct name, version from maptool_instance where last_heartbeat>= curdate() - interval ? hour',
+      'select distinct name, version from maptool_instance where last_heartbeat>= now() - interval ? hour',
       [numberOfHours],
     );
 
