@@ -20,6 +20,7 @@ services:
       - .env
     volumes:
       - maptool-server-listing-db-vol:/var/lib/mysql
+      - ./db-export:/root/db-export
     container_name: maptool-server-listing-db
     restart: unless-stopped
 
