@@ -25,22 +25,30 @@ import path from 'path';
 import { Config } from '../../config/Config';
 
 interface ServerVersionDetails extends RowDataPacket {
+  weekday: number;
   version: string;
   servers: number;
   players: number;
 }
 
-interface ServerVersionList {
+interface ServerDaysList {
   hours: number;
-  versionInfo: {
-    version: string;
-    servers: number;
-    players: number;
+  days: {
+    versionInfo: {
+      version: string;
+      servers: number;
+      players: number;
+    }[];
   }[];
 }
 
+interface ReturnValue {
+  timezone: string;
+  data: ServerDaysList[];
+}
+
 @injectable()
-export class ServerVersionsRouteHandler implements RouteHandler {
+export class ServersByDayRouteHandler implements RouteHandler {
   private readonly logger;
   private readonly sqlQuery: string;
   constructor(
@@ -52,14 +60,14 @@ export class ServerVersionsRouteHandler implements RouteHandler {
   ) {
     this.logger = loggerFactory.getLogger();
     this.sqlQuery = fs
-      .readFileSync(path.join(__dirname, '../../resources/sql/versions.sql'))
+      .readFileSync(path.join(__dirname, '../../resources/sql/server-days.sql'))
       .toString();
   }
 
   addRoutes(expressApp: Express): void {
-    this.logger.info('Registering /server-versions');
+    this.logger.info('Registering /server-days');
 
-    expressApp.get('/server-versions', (req, res) => {
+    expressApp.get('/server-days', (req, res) => {
       const numHoursString = req.query.hours;
 
       const hoursArray: number[] = [];
@@ -72,9 +80,12 @@ export class ServerVersionsRouteHandler implements RouteHandler {
           .map(Number)
           .forEach((n) => hoursArray.push(n));
       }
+      const timezone = req.query.timezone
+        ? req.query.timezone.toString()
+        : 'UTC';
 
-      this.getServerVersions(hoursArray)
-        .then((details: ServerVersionList[]) => {
+      this.getServerVersions(hoursArray, timezone)
+        .then((details: ReturnValue) => {
           res.send(details);
         })
         .catch((err) => {
@@ -85,34 +96,53 @@ export class ServerVersionsRouteHandler implements RouteHandler {
     });
   }
 
-  async getServerVersions(hours: number[]): Promise<ServerVersionList[]> {
-    const versions: ServerVersionList[] = [];
+  async getServerVersions(
+    hours: number[],
+    timezone: string,
+  ): Promise<ReturnValue> {
+    const returnValue: ReturnValue = { timezone: timezone, data: [] };
     for (const h of hours) {
-      const vals = await this.getServerVersionsByHour(h);
+      const vals = await this.getServerVersionsByHour(h, timezone);
       if (vals.length > 0) {
-        const vers: ServerVersionList = { hours: h, versionInfo: [] };
-        vals.forEach((v) =>
-          vers.versionInfo.push({
+        const vers: ServerDaysList = { hours: h, days: [] };
+        console.log('here 1');
+        for (let i = 0; i < 7; i++) {
+          vers.days[i] = { versionInfo: [] };
+        }
+        console.log('here 2');
+        vals.forEach((v) => {
+          console.log(v.weekday);
+          console.log(v.version);
+          console.log(v.servers);
+          console.log(v.players);
+          vers.days[v.weekday].versionInfo.push({
             version: v.version,
             servers: v.servers,
             players: Number(v.players),
-          }),
-        );
-        versions.push(vers);
+          });
+        });
+        console.log('here 3');
+        returnValue.data.push(vers);
       }
     }
 
-    return versions;
+    return returnValue;
   }
 
   async getServerVersionsByHour(
     hours: number,
+    timezone: string,
   ): Promise<ServerVersionDetails[]> {
     const pool = await this.dbConnectionPool.getPool();
     const [serverVersionDetails]: [
       ServerVersionDetails[],
       FieldPacket[],
-    ] = await pool.query<ServerVersionDetails[]>(this.sqlQuery, [hours, hours]);
+    ] = await pool.query<ServerVersionDetails[]>(this.sqlQuery, [
+      hours,
+      timezone,
+      hours,
+      timezone,
+    ]);
 
     return serverVersionDetails;
   }

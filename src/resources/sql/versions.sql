@@ -1,4 +1,4 @@
-select version, count(*) as servers, sum(players) as players
+select version, count(*) as servers, sum(ifnull(players,3)) as players
 from (
          select mi.client_id, mi.name, mi.version, max(hl.number_players) as players
          from maptool_instance mi

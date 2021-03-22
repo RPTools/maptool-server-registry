@@ -39,6 +39,7 @@ import { ServersTodayRouteHandler } from '../server/routes/ServersTodayRouteHand
 import { ServersYesterdayRouteHandler } from '../server/routes/ServersYesterdayRouteHandler';
 import { ServersLastNHoursRouteHandler } from '../server/routes/ServersLastNHoursRouteHandler';
 import { ServerVersionsRouteHandler } from '../server/routes/ServerVersionsRouteHandler';
+import { ServersByDayRouteHandler } from '../server/routes/ServersByDayRouteHandler';
 
 /**
  * The dependency container for inversify.
@@ -135,6 +136,11 @@ dependencyContainer
   .inSingletonScope();
 
 dependencyContainer
+  .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServersByDayRouteHandler)
+  .to(ServersByDayRouteHandler)
+  .inSingletonScope();
+
+dependencyContainer
   .bind<RoutesManager>(ROUTE_DEPENDENCY_TYPES.RoutesHandler)
   .to(RoutesManagerImpl)
   .inSingletonScope()
@@ -189,5 +195,9 @@ dependencyContainer
     );
     routesHandler.registerRoutes(serverVersionsRouteHandler);
 
+    const serversByDayRouteHandler = context.container.get<RouteHandler>(
+      ROUTE_DEPENDENCY_TYPES.ServersByDayRouteHandler,
+    );
+    routesHandler.registerRoutes(serversByDayRouteHandler);
     return routesHandler;
   });

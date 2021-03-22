@@ -16,6 +16,18 @@
 import { Config } from './Config';
 import { injectable } from 'inversify';
 
+const DEFAULT_HOURS = [
+  12,
+  24,
+  48,
+  7 * 24,
+  14 * 24,
+  30 * 24,
+  60 * 24,
+  180 * 24,
+  365 * 24,
+];
+
 @injectable()
 export class ConfigImpl implements Config {
   /**
@@ -34,5 +46,13 @@ export class ConfigImpl implements Config {
    */
   getTimeoutMinutes(): number {
     return this.heartBeatMinutes * 2;
+  }
+
+  /**
+   * Returns the number of hours to use as defaults for routes that require hours but allow defaults
+   * if no values are passed.
+   */
+  getDefaultHours(): number[] {
+    return DEFAULT_HOURS;
   }
 }
