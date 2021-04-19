@@ -20,7 +20,7 @@ import { DEPENDENCY_TYPES } from '../../inversify/inversify-types';
 import { LoggerFactory } from '../../util/LoggerFactory';
 import { DBConnectionPool } from '../../database/DBConnectionPool';
 import { v4 } from 'uuid';
-import { FieldPacket, RowDataPacket } from "mysql2";
+import { FieldPacket, RowDataPacket } from 'mysql2';
 
 interface ServerDetails extends RowDataPacket {
   id: string;
@@ -89,7 +89,7 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
         ServerDetails[],
         FieldPacket[],
       ] = await pool.query<ServerDetails[]>(
-        'select distinct id from maptool_instance where client_id = ? and active = true',
+        'select distinct id from maptool_instance where client_id = ? order by last_heartbeat desc',
         [heartBeat.clientId],
       );
       id = serverDetails[0].id;

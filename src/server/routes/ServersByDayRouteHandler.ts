@@ -105,23 +105,16 @@ export class ServersByDayRouteHandler implements RouteHandler {
       const vals = await this.getServerVersionsByHour(h, timezone);
       if (vals.length > 0) {
         const vers: ServerDaysList = { hours: h, days: [] };
-        console.log('here 1');
         for (let i = 0; i < 7; i++) {
           vers.days[i] = { versionInfo: [] };
         }
-        console.log('here 2');
         vals.forEach((v) => {
-          console.log(v.weekday);
-          console.log(v.version);
-          console.log(v.servers);
-          console.log(v.players);
           vers.days[v.weekday].versionInfo.push({
             version: v.version,
             servers: v.servers,
             players: Number(v.players),
           });
         });
-        console.log('here 3');
         returnValue.data.push(vers);
       }
     }
