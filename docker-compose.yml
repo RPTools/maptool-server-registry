@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile-node
     image: rptools/maptool-server-listing
     env_file:
-      - docker.env
+      - .env
     ports:
       - "5000:3000"
     container_name: maptool-server-listing
@@ -17,9 +17,10 @@ services:
       dockerfile: Dockerfile-db
     image: rptools/maptool-server-listing-db
     env_file:
-      - docker.env
+      - .env
     volumes:
       - maptool-server-listing-db-vol:/var/lib/mysql
+      - ./db-export:/root/db-export
     container_name: maptool-server-listing-db
     restart: unless-stopped
 

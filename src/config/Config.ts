@@ -23,4 +23,10 @@ export interface Config {
    * Returns the number of minutes for time out waiting for a heart beat.
    */
   getTimeoutMinutes(): number;
+
+  /**
+   * Returns the number of hours to use as defaults for routes that require hours but allow defaults
+   * if no values are passed.
+   */
+  getDefaultHours(): number[];
 }

@@ -35,6 +35,11 @@ import { ConfigImpl } from '../config/ConfigImpl';
 import { ServerExpiry } from '../scheduled/ServerExpiry';
 import { ServerExpiryImpl } from '../scheduled/ServerExpiryImpl';
 import { ServerDetailsRouteHandler } from '../server/routes/ServerDetailsRouteHandler';
+import { ServersTodayRouteHandler } from '../server/routes/ServersTodayRouteHandler';
+import { ServersYesterdayRouteHandler } from '../server/routes/ServersYesterdayRouteHandler';
+import { ServersLastNHoursRouteHandler } from '../server/routes/ServersLastNHoursRouteHandler';
+import { ServerVersionsRouteHandler } from '../server/routes/ServerVersionsRouteHandler';
+import { ServersByDayRouteHandler } from '../server/routes/ServersByDayRouteHandler';
 
 /**
  * The dependency container for inversify.
@@ -111,6 +116,31 @@ dependencyContainer
   .inSingletonScope();
 
 dependencyContainer
+  .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServersTodayRouteHandler)
+  .to(ServersTodayRouteHandler)
+  .inSingletonScope();
+
+dependencyContainer
+  .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServersYesterdayRouteHandler)
+  .to(ServersYesterdayRouteHandler)
+  .inSingletonScope();
+
+dependencyContainer
+  .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServersLastNHoursRouteHandler)
+  .to(ServersLastNHoursRouteHandler)
+  .inSingletonScope();
+
+dependencyContainer
+  .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServerVersionsRouteHandler)
+  .to(ServerVersionsRouteHandler)
+  .inSingletonScope();
+
+dependencyContainer
+  .bind<RouteHandler>(ROUTE_DEPENDENCY_TYPES.ServersByDayRouteHandler)
+  .to(ServersByDayRouteHandler)
+  .inSingletonScope();
+
+dependencyContainer
   .bind<RoutesManager>(ROUTE_DEPENDENCY_TYPES.RoutesHandler)
   .to(RoutesManagerImpl)
   .inSingletonScope()
@@ -144,5 +174,30 @@ dependencyContainer
       ROUTE_DEPENDENCY_TYPES.ServerDetailsRouteHandler,
     );
     routesHandler.registerRoutes(serverDetailsRouteHandler);
+
+    const serversTodayRouteHandler = context.container.get<RouteHandler>(
+      ROUTE_DEPENDENCY_TYPES.ServersTodayRouteHandler,
+    );
+    routesHandler.registerRoutes(serversTodayRouteHandler);
+
+    const serversYesterdayRouteHandler = context.container.get<RouteHandler>(
+      ROUTE_DEPENDENCY_TYPES.ServersYesterdayRouteHandler,
+    );
+    routesHandler.registerRoutes(serversYesterdayRouteHandler);
+
+    const serversLastNHoursRouteHandler = context.container.get<RouteHandler>(
+      ROUTE_DEPENDENCY_TYPES.ServersLastNHoursRouteHandler,
+    );
+    routesHandler.registerRoutes(serversLastNHoursRouteHandler);
+
+    const serverVersionsRouteHandler = context.container.get<RouteHandler>(
+      ROUTE_DEPENDENCY_TYPES.ServerVersionsRouteHandler,
+    );
+    routesHandler.registerRoutes(serverVersionsRouteHandler);
+
+    const serversByDayRouteHandler = context.container.get<RouteHandler>(
+      ROUTE_DEPENDENCY_TYPES.ServersByDayRouteHandler,
+    );
+    routesHandler.registerRoutes(serversByDayRouteHandler);
     return routesHandler;
   });
