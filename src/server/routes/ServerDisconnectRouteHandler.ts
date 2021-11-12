@@ -39,7 +39,7 @@ export class ServerDisconnectRouteHandler implements RouteHandler {
 
   addRoutes(expressApp: Express): void {
     this.logger.info('Registering /server-disconnect');
-    expressApp.put('/server-disconnect', (req, res) => {
+    expressApp.patch('/server-disconnect', (req, res) => {
       const disconnect = req.body as Disconnect;
 
       // First check all the mandatory fields
@@ -72,7 +72,7 @@ export class ServerDisconnectRouteHandler implements RouteHandler {
       );
 
       await pool.query(
-        'update maptool_instance set active = false, last_heartbeat = now() where client_id = ?',
+        'update maptool_instance set active = false where client_id = ?',
         [disconnect.clientId],
       );
 
