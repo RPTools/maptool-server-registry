@@ -26,6 +26,7 @@ import { serialize } from 'v8';
 interface ServerDetails extends RowDataPacket {
   name: string;
   version: string;
+  webrtc: boolean;
 }
 
 @injectable()
@@ -59,8 +60,11 @@ export class ActiveServersRouteHandler implements RouteHandler {
     const pool = await this.dbConnectionPool.getPool();
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
-    >('select name, version from maptool_instance where active = true');
+    >('select name, version, webrtc from maptool_instance where active = true');
 
+    serverDetails.forEach((server) => {
+      server.webrtc = !!server.webrtc;
+    });
     return serverDetails;
   }
 }

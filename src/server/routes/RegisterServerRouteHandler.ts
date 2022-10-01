@@ -32,6 +32,8 @@ interface ServerDetails {
   country: string;
   language: string;
   timezone: string;
+  webrtc?: boolean;
+  info?: { name: string; value: string }[];
 }
 
 interface ExistingInstance {
@@ -110,9 +112,9 @@ export class RegisterServerRouteHandler implements RouteHandler {
 
     await pool.query(
       `insert into maptool_instance (
-        id, client_id, name, address, port, public, version, last_heartbeat, active, first_seen, country_code, language, timezone
+        id, client_id, name, address, port, public, version, last_heartbeat, active, first_seen, country_code, language, timezone, webrtc
     ) values (
-        ?, ?, ?, ?, ?, true, ?, now(), true, now(), ?, ?, ?
+        ?, ?, ?, ?, ?, true, ?, now(), true, now(), ?, ?, ?, ?
     )`,
       [
         id,
@@ -124,8 +126,24 @@ export class RegisterServerRouteHandler implements RouteHandler {
         serverDetails.country,
         serverDetails.language,
         serverDetails.timezone,
+        serverDetails.webrtc ? serverDetails.webrtc : false,
       ],
     );
+
+    // Delete any pre-exsting info for this server
+    await pool.query(
+      'delete from maptool_instance_info where instance_id = ?',
+      [id],
+    );
+
+    if (serverDetails.info) {
+      for (const info of serverDetails.info) {
+        await pool.query(
+          'insert into maptool_instance_info (instance_id, name, value) values (?, ?, ?)',
+          [id, info.name.substring(0, 255), info.value.substring(0, 255)],
+        );
+      }
+    }
 
     await pool.query(
       'insert into event_log (instance_id, event_type) values (?, ?)',
