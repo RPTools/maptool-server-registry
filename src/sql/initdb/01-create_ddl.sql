@@ -1,5 +1,5 @@
 create table maptool_instance (
-    id              varchar(255)       not null,
+    id              varchar(255)        not null,
     client_id       varchar(255)        not null,
     name            varchar(255)        not null,
     address         varchar(100),
@@ -12,6 +12,7 @@ create table maptool_instance (
     country_code    varchar(2)          not null,
     language        varchar(100)        not null,
     timezone        varchar(100)        not null,
+    webrtc          boolean,
     primary key (id),
     index(active)
 );
@@ -35,6 +36,17 @@ create table heartbeat_log (
     number_maps     smallint            not null,
 
     index(instance_id),
+
+    foreign key(instance_id)
+        references maptool_instance(id)
+);
+
+create table maptool_instance_info (
+    instance_id     varchar(255)        not null,
+    name            varchar(255)        not null,
+    value           varchar(255)        not null,
+
+    primary key (instance_id, name),
 
     foreign key(instance_id)
         references maptool_instance(id)
