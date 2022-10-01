@@ -20,14 +20,16 @@ import { DEPENDENCY_TYPES } from '../../inversify/inversify-types';
 import { LoggerFactory } from '../../util/LoggerFactory';
 import { DBConnectionPool } from '../../database/DBConnectionPool';
 import { v4 } from 'uuid';
+import { FieldPacket, RowDataPacket } from 'mysql2';
+import { serialize } from 'v8';
 
-interface Disconnect {
-  id: string;
-  clientId: string;
+interface ServerDetails extends RowDataPacket {
+  name: string;
+  version: string;
 }
 
 @injectable()
-export class ServerDisconnectRouteHandler implements RouteHandler {
+export class ServersLastNHoursRouteHandler implements RouteHandler {
   private readonly logger;
   constructor(
     @inject(DEPENDENCY_TYPES.LoggerFactory) loggerFactory: LoggerFactory,
@@ -38,51 +40,46 @@ export class ServerDisconnectRouteHandler implements RouteHandler {
   }
 
   addRoutes(expressApp: Express): void {
-    this.logger.info('Registering /server-disconnect');
-    expressApp.patch('/server-disconnect', (req, res) => {
-      const disconnect = req.body as Disconnect;
+    this.logger.info('Registering /servers-last-n-hours');
 
-      // First check all the mandatory fields
-      if (!disconnect.id || !disconnect.clientId) {
-        this.logger.error('Invalid Disconnect Message');
-        this.logger.error(JSON.stringify(req.body));
+    expressApp.get('/servers-last-n-hours', (req, res) => {
+      const numHoursString = req.query.hours;
+
+      if (!numHoursString || typeof numHoursString != 'string') {
+        this.logger.error('Invalid number of hours');
         res.sendStatus(400);
         return;
       }
 
-      this.registerDisconnect(disconnect)
-        .then(() => {
-          res.sendStatus(200);
-          return;
+      const numHours = parseInt(numHoursString);
+
+      if (isNaN(numHours)) {
+        this.logger.error('Invalid number of hours');
+        res.sendStatus(400);
+        return;
+      }
+
+      this.getServerDetails(numHours)
+        .then((details: ServerDetails[]) => {
+          res.send(details);
         })
         .catch((err) => {
+          this.logger.error('Error retrieving servers');
           this.logger.error(err);
-          this.logger.error(JSON.stringify(disconnect));
+          res.sendStatus(500);
         });
     });
   }
 
-  async registerDisconnect(disconnect: Disconnect): Promise<void> {
+  async getServerDetails(numberOfHours: number): Promise<ServerDetails[]> {
     const pool = await this.dbConnectionPool.getPool();
+    const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
+      ServerDetails[]
+    >(
+      'select distinct name, version from maptool_instance where last_heartbeat>= now() - interval ? hour',
+      [numberOfHours],
+    );
 
-    try {
-      await pool.query(
-        'insert into event_log (instance_id, event_type) values (?, ?)',
-        [disconnect.id, 'DisconnectServer'],
-      );
-
-      await pool.query(
-        'update maptool_instance set active = false where client_id = ?',
-        [disconnect.clientId],
-      );
-
-      await pool.query(
-        'update maptool_instance set active = false, last_heartbeat = now() where id = ?',
-        [disconnect.id],
-      );
-    } catch (err) {
-      this.logger.error('Error trying to process disconnect message');
-      this.logger.error(err);
-    }
+    return serverDetails;
   }
 }

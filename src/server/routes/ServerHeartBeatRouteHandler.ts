@@ -20,13 +20,18 @@ import { DEPENDENCY_TYPES } from '../../inversify/inversify-types';
 import { LoggerFactory } from '../../util/LoggerFactory';
 import { DBConnectionPool } from '../../database/DBConnectionPool';
 import { v4 } from 'uuid';
+import { FieldPacket, RowDataPacket } from 'mysql2';
+
+interface ServerDetails extends RowDataPacket {
+  id: string;
+}
 
 interface HeartBeat {
   id: string;
   clientId: string;
   address: string;
-  players: number;
-  maps: number;
+  number_players: number;
+  number_maps: number;
 }
 
 @injectable()
@@ -42,13 +47,13 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
 
   addRoutes(expressApp: Express): void {
     this.logger.info('Registering /server-heartbeat');
-    expressApp.post('/server-heartbeat', (req, res) => {
+    expressApp.patch('/server-heartbeat', (req, res) => {
       const heartbeat = req.body as HeartBeat;
 
       let valid = true;
 
       // First check all the mandatory fields
-      if (!heartbeat.id || !heartbeat.clientId) {
+      if (!heartbeat.id && !heartbeat.clientId) {
         valid = false;
       }
 
@@ -77,20 +82,32 @@ export class ServerHeartBeatRouteHandler implements RouteHandler {
 
   async registerHeartBeat(heartBeat: HeartBeat): Promise<void> {
     const pool = await this.dbConnectionPool.getPool();
+    let id = heartBeat.id;
+    if (!id) {
+      // Work around for bug in 1.8.3/1.8.4
+      const [serverDetails]: [
+        ServerDetails[],
+        FieldPacket[],
+      ] = await pool.query<ServerDetails[]>(
+        'select distinct id from maptool_instance where client_id = ? order by last_heartbeat desc',
+        [heartBeat.clientId],
+      );
+      id = serverDetails[0].id;
+    }
 
     await pool.query(
-      'update maptool_instance set active = false, address = null, where active = true and client_id = ? and id != ?',
-      [heartBeat.clientId, heartBeat.id],
+      'insert into heartbeat_log(instance_id, number_players, number_maps) values (?, ?, ?)',
+      [id, heartBeat.number_players, heartBeat.number_maps],
+    );
+
+    await pool.query(
+      'update maptool_instance set active = false, address = null where active = true and client_id = ? and id != ?',
+      [heartBeat.clientId, id],
     );
 
     await pool.query(
       'update maptool_instance set active = true, address = ?, last_heartbeat = now() where id = ?',
-      [heartBeat.id, heartBeat.address],
-    );
-
-    await pool.query(
-      'insert into heartbeat_log(instance_id, number_players, number_maps) values (?, ?, ?)',
-      [heartBeat.id, heartBeat.players, heartBeat.maps],
+      [heartBeat.address, id],
     );
   }
 }

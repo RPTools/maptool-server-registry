@@ -23,12 +23,19 @@ import { v4 } from 'uuid';
 import { FieldPacket, RowDataPacket } from 'mysql2';
 import { serialize } from 'v8';
 
+interface ServerInfo extends RowDataPacket {
+  name: string;
+  value: string;
+}
+
 interface ServerDetails extends RowDataPacket {
   name: string;
   address: string;
   port: number;
   version: string;
   last_heartbeat: string;
+  webrtc: boolean;
+  info: ServerInfo[];
 }
 
 @injectable()
@@ -72,10 +79,23 @@ export class ServerDetailsRouteHandler implements RouteHandler {
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
     >(
-      'select name, address, port, version, last_heartbeat from maptool_instance where active = true and name = ?',
+      'select name, address, port, version, last_heartbeat, ifnull(webrtc, false) webrtc from maptool_instance where active = true and name = ?',
       [name],
     );
 
-    return serverDetails[0];
+    const serverDet = serverDetails[0];
+
+    if (serverDet) {
+      const [serverInfo]: [
+        ServerInfo[],
+        FieldPacket[],
+      ] = await pool.query(
+        'select name, value from maptool_instance_info where instance_id = ?',
+        [serverDet.id],
+      );
+      serverDet.info = serverInfo;
+    }
+
+    return serverDet;
   }
 }

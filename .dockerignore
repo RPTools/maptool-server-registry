@@ -1,0 +1,6 @@
+**/node_modules
+
+
+
+# Export dir for database
+db-export
