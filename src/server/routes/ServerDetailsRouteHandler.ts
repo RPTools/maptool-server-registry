@@ -93,6 +93,7 @@ export class ServerDetailsRouteHandler implements RouteHandler {
         'select name, value from maptool_instance_info where instance_id = ?',
         [serverDet.id],
       );
+      serverDet.webrtc = !!serverDet.webrtc;
       serverDet.info = serverInfo;
     }
 
