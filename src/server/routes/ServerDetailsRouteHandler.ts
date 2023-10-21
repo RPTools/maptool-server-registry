@@ -79,11 +79,14 @@ export class ServerDetailsRouteHandler implements RouteHandler {
     const [serverDetails]: [ServerDetails[], FieldPacket[]] = await pool.query<
       ServerDetails[]
     >(
-      'select name, address, port, version, last_heartbeat, ifnull(webrtc, false) webrtc from maptool_instance where active = true and name = ?',
+      'select name, address, port, version, last_heartbeat, webrtc from maptool_instance where active = true and name = ?',
       [name],
     );
 
     const serverDet = serverDetails[0];
+    serverDetails.forEach((server) => {
+      server.webrtc = !!server.webrtc;
+    });
 
     if (serverDet) {
       const [serverInfo]: [
@@ -93,7 +96,6 @@ export class ServerDetailsRouteHandler implements RouteHandler {
         'select name, value from maptool_instance_info where instance_id = ?',
         [serverDet.id],
       );
-      serverDet.webrtc = !!serverDet.webrtc;
       serverDet.info = serverInfo;
     }
 
