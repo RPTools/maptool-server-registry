@@ -1,9 +1,11 @@
-FROM node:15
+FROM node:18
 WORKDIR /root/app
 COPY package.json /root/app
 COPY package-lock.json /root/app
 RUN npm install
+#COPY 
 RUN npm install -g nodemon
+RUN npm install -g pm2
 COPY . /root/app
 
-CMD [ "npm", "start" ]
+CMD [ "pm2-runtime", "npm", "--", "start" ]
