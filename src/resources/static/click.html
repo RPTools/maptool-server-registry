@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <script>
+window.onload = function() {
+  const urlParams = new URLSearchParams(location.search);
+  const uri = urlParams.get("uri");
+  if (!uri) {
+    return;
+  }
+  if (!uri.startsWith("rptools-maptool+")) {
+    return;
+  }
+  location.replace(uri);
+}
+    </script>
+  </head>
+</html>
+
